@@ -45,7 +45,7 @@ INSTALLED_APPS = [
 
 # Twilio settings
 TWILIO_ACCOUNT_SID = "AC12a0e08ab76623c8f7a28d70b2fd75e8"
-TWILIO_AUTH_TOKEN = 'cdbdca915aa94ecbabbeadeca57efb88'
+TWILIO_AUTH_TOKEN = 'e643c36f9d82ad878c1ce0b5c1aa62f6'
 TWILIO_PHONE_NUMBER = "+13613155789"
 
 # Cache backend settings (using the in-memory cache for simplicity, you can use a different cache backend in production)
