@@ -33,5 +33,4 @@ urlpatterns = [
     path('patients/create/', create_patient, name='create_patient'),
     path('patients/<int:pk>/update/', update_patient, name='update_patient'),
     path('patients/<int:pk>/delete/', delete_patient, name='delete_patient'),
-
 ]

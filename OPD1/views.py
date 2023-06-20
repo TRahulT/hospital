@@ -251,7 +251,8 @@ def get_patient(request, pk):
 def create_patient(request):
     serializer = PatientSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
+        ip_address = request.META.get('REMOTE_ADDR')  # Get the client IP address
+        serializer.save(ipAddress=ip_address)  # Set the IP address during save
         return Response(serializer.data, status=201)
     return Response(serializer.errors, status=400)
 
@@ -260,7 +261,8 @@ def update_patient(request, pk):
     patient = Patient.objects.get(id=pk)
     serializer = PatientSerializer(instance=patient, data=request.data)
     if serializer.is_valid():
-        serializer.save()
+        ip_address = request.META.get('REMOTE_ADDR')  # Get the client IP address
+        serializer.save(ipAddress=ip_address)  # Set the IP address during save
         return Response(serializer.data)
     return Response(serializer.errors, status=400)
 
