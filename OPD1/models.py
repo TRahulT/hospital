@@ -3,7 +3,9 @@ from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils import timezone
-
+from django.contrib.auth import get_user_model
+from django.http import HttpRequest
+from django.contrib import admin
 class CustomUser(AbstractUser):
     # Add your additional fields here
     is_limited_user = models.BooleanField(default=False)
@@ -114,7 +116,7 @@ class Patient(models.Model):
     inputDate=models.DateTimeField(auto_now=True)
     inputBy=models.CharField(max_length=50 ,null=True,blank=True )
     delmark=models.BooleanField(default=True)
-    modifiedBy=models.ForeignKey(CustomUser, on_delete=models.CASCADE, blank=True, null=True)
+    modifiedBy=models.ForeignKey(get_user_model(), on_delete=models.CASCADE, blank=True, null=True)
     modifiedTime=models.DateTimeField(blank=True, null=True)
     ipAddress=models.GenericIPAddressField(default='192.168.0.1')
     Searchablefield = ['id', 'name', 'phone_number']
@@ -128,6 +130,12 @@ class Patient(models.Model):
             self.inputBy = self.name
         super().save(*args, **kwargs)
 
+    def save_model(self, request: HttpRequest, obj: admin.ModelAdmin, form: admin.ModelAdmin, change: bool):
+        if not change:
+            # Set the modifiedBy field only when creating a new object
+            self.modifiedBy = request.user
+        super().save_model(request, obj, form, change)
+
 
 
 @receiver(pre_save, sender=Patient)
@@ -136,3 +144,6 @@ def update_modified_time(sender, instance, **kwargs):
         instance.modifiedTime = timezone.now()
     else:
         instance.modifiedTime = None
+
+
+

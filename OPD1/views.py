@@ -1,7 +1,9 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Specialty, Doctor, State, District, Village, City
-from .serializers import SpecialtySerializer, DoctorSerializer, StateSerializer, DistrictSerializer, VillageSerializer, CitySerializer
+from .serializers import SpecialtySerializer, DoctorSerializer, StateSerializer, DistrictSerializer, VillageSerializer, \
+    CitySerializer
+
 
 # Specialty views
 @api_view(['GET', 'POST'])
@@ -33,6 +35,7 @@ def specialty_detail(request, pk):
     elif request.method == 'PUT':
         serializer = SpecialtySerializer(specialty, data=request.data)
         if serializer.is_valid():
+            name = serializer.validated_data['name']
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=400)
@@ -49,8 +52,20 @@ def doctor_list(request):
         serializer = DoctorSerializer(doctors, many=True)
         return Response(serializer.data)
     elif request.method == 'POST':
+
         serializer = DoctorSerializer(data=request.data)
         if serializer.is_valid():
+            first_name = serializer.validated_data['first_name']
+            last_name = serializer.validated_data['last_name']
+            email = serializer.validated_data['email']
+            phone_number = serializer.validated_data['phone_number']
+            password = serializer.validated_data['password']
+            address = serializer.validated_data['address']
+            specialty = serializer.validated_data['specialty']
+            qualification = serializer.validated_data['qualification']
+            experience = serializer.validated_data['experience']
+            bio = serializer.validated_data['bio']
+            profile_picture = serializer.validated_data['profile_picture']
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
@@ -69,6 +84,17 @@ def doctor_detail(request, pk):
     elif request.method == 'PUT':
         serializer = DoctorSerializer(doctor, data=request.data)
         if serializer.is_valid():
+            first_name = serializer.validated_data['first_name']
+            last_name = serializer.validated_data['last_name']
+            email = serializer.validated_data['email']
+            phone_number = serializer.validated_data['phone_number']
+            password = serializer.validated_data['password']
+            address = serializer.validated_data['address']
+            specialty = serializer.validated_data['specialty']
+            qualification = serializer.validated_data['qualification']
+            experience = serializer.validated_data['experience']
+            bio = serializer.validated_data['bio']
+            profile_picture = serializer.validated_data['profile_picture']
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=400)
@@ -222,7 +248,9 @@ def city_detail(request, pk):
         city.delete()
         return Response(status=204)
 
+
 from django.http import JsonResponse
+
 
 def get_districts_by_state(request, state_id):
     districts = District.objects.filter(stateID=state_id)
@@ -235,11 +263,13 @@ from rest_framework.response import Response
 from .models import Patient
 from .serializers import PatientSerializer
 
+
 @api_view(['GET'])
 def get_patients(request):
     patients = Patient.objects.all()
     serializer = PatientSerializer(patients, many=True)
     return Response(serializer.data)
+
 
 @api_view(['GET'])
 def get_patient(request, pk):
@@ -247,33 +277,56 @@ def get_patient(request, pk):
     serializer = PatientSerializer(patient)
     return Response(serializer.data)
 
+
 @api_view(['POST'])
 def create_patient(request):
     serializer = PatientSerializer(data=request.data)
     if serializer.is_valid():
-        ip_address = request.META.get('REMOTE_ADDR')  # Get the client IP address
-        serializer.save(ipAddress=ip_address)  # Set the IP address during save
+        name = serializer.validated_data['name']
+        fh_name = serializer.validated_data['fh_name']
+        dob = serializer.validated_data['dob']
+        gender = serializer.validated_data['gender']
+        category = serializer.validated_data['category']
+        phone_number = serializer.validated_data['phone_number']
+        state = serializer.validated_data['state']
+        district = serializer.validated_data['district']
+        city = serializer.validated_data['city']
+        village = serializer.validated_data['village']
+        address = serializer.validated_data['address']
+        delmark = serializer.validated_data['delmark']
+        modifiedBy = serializer.validated_data['modifiedBy']
+        ipAddress = serializer.validated_data.get('ipAddress')
+        serializer.save()  # Set the IP address during save
         return Response(serializer.data, status=201)
     return Response(serializer.errors, status=400)
 
-@api_view(['PUT'])
+
+@api_view(['PUT','PATCH'])
 def update_patient(request, pk):
     patient = Patient.objects.get(id=pk)
     serializer = PatientSerializer(instance=patient, data=request.data)
     if serializer.is_valid():
-        ip_address = request.META.get('REMOTE_ADDR')  # Get the client IP address
-        serializer.save(ipAddress=ip_address)  # Set the IP address during save
+        name = serializer.validated_data['name']
+        fh_name = serializer.validated_data['fh_name']
+        dob = serializer.validated_data['dob']
+        gender = serializer.validated_data['gender']
+        category = serializer.validated_data['category']
+        phone_number = serializer.validated_data['phone_number']
+        state = serializer.validated_data['state']
+        district = serializer.validated_data['district']
+        city = serializer.validated_data['city']
+        village = serializer.validated_data['village']
+        address = serializer.validated_data['address']
+        delmark= serializer.validated_data['delmark']
+        modifiedBy = serializer.validated_data['modifiedBy']
+        ipAddress = serializer.validated_data.get('ipAddress') # Get the client IP address
+        serializer.save()  # Set the IP address during save
         return Response(serializer.data)
     return Response(serializer.errors, status=400)
+
 
 @api_view(['DELETE'])
 def delete_patient(request, pk):
     patient = Patient.objects.get(id=pk)
     patient.delete()
     return Response(status=204)
-
-
-
-
-
-
