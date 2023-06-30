@@ -1,13 +1,14 @@
+from django.contrib.auth.models import Permission
 from rest_framework.decorators import api_view,authentication_classes,permission_classes
 from .models import Specialty, Doctor, State, District, Village, City
 from .serializers import SpecialtySerializer, DoctorSerializer, StateSerializer, DistrictSerializer, VillageSerializer, \
     CitySerializer,DoctorLoginSerializer,DoctorRegistrationSerializer
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAdminUser,AllowAny
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from rest_framework.decorators import api_view
 from django.views.decorators.csrf import csrf_exempt
-
+from django.contrib.auth.hashers import check_password
 
 # Specialty views
 @api_view(['GET', 'POST'])
@@ -327,6 +328,8 @@ def create_patient(request):
         village = serializer.validated_data['village']
         address = serializer.validated_data['address']
         delmark = serializer.validated_data['delmark']
+        speciality=serializer.validated_data['speciality']
+        doctor= serializer.validated_data['doctor']
         modifiedBy = serializer.validated_data['modifiedBy']
         ipAddress = serializer.validated_data.get('ipAddress')
         serializer.save()  # Set the IP address during save
@@ -400,8 +403,57 @@ def create_operator(request):
             user_type='operator',
             is_staff=True
         )
+        permissions = ['view_patient', 'add_patient', 'change_patient', 'delete_patient']
+        for permission_codename in permissions:
+            permission = Permission.objects.get(codename=permission_codename)
+            user.user_permissions.add(permission)
         return Response({'message': 'Operator created successfully.'}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+def operator_login(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+
+    # Authenticate the operator credentials
+    user = authenticate(username=username, password=password)
+
+    if user is not None and user.is_active and user.is_staff and user.user_type == 'operator':
+        # Log in the operator
+        login(request, user)
+
+        # Return success response
+        return Response({'message': 'Operator logged in successfully.'}, status=status.HTTP_200_OK)
+    else:
+        # Return error response
+        return Response({'message': 'Invalid username or password.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def change_password(request):
+    operator = request.user
+    old_password = request.data.get('old_password')
+    new_password = request.data.get('new_password')
+
+    # Verify the old password
+    if not check_password(old_password, operator.password):
+        return Response({'message': 'Invalid old password.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Change the password
+    operator.set_password(new_password)
+    operator.save()
+
+    # Return success response
+    return Response({'message': 'Password changed successfully.'}, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+def operator_logout(request):
+    # Log out the operator
+    logout(request)
+
+    # Return success response
+    return Response({'message': 'Operator logged out successfully.'}, status=status.HTTP_200_OK)
+
 @csrf_exempt
 @api_view(['POST'])
 def Create_patient(request):

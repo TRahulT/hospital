@@ -97,7 +97,7 @@ class City(models.Model):
 
 
 class Patient(models.Model):
-    id = CustomAutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
     fh_name = models.CharField(max_length=50)
     dob = models.DateField()

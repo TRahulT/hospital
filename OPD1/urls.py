@@ -7,14 +7,11 @@ from .views import (
     village_list, village_detail,
     city_list, city_detail,get_districts_by_state,
 
-    get_patients,
-    get_patient,
+    get_patients,get_patient,create_patient, update_patient,delete_patient,
     get_patient_data,
-    create_patient,
-    update_patient,
-    delete_patient,
-    create_superuser, create_operator, Create_patient
-    ,patient_login,DoctorLoginView,DoctorLogoutView
+    # users
+    create_superuser, create_operator,operator_login, change_password,operator_logout,
+    Create_patient,patient_login,DoctorLoginView,DoctorLogoutView
 )
 
 urlpatterns = [
@@ -46,16 +43,16 @@ urlpatterns = [
     # Register
     path('register/superuser/', create_superuser, name='register_superuser'),
     path('register/operator/', create_operator, name='register_operator'),
+    path('operator/login/', operator_login, name='operator_login'),
+    path('operator/logout/', operator_logout, name='operator_logout'),
+    path('operator/change_password/', change_password, name='change_password'),
     path('register/patient/', Create_patient, name='register_patient'),
     # path('register/doctor/',Create_doctor,name='register_doctor'),
 
-
     # login Patient
     path('login/patient/', patient_login, name='patient_login'),
-
     path('doctor-login/', DoctorLoginView.as_view(), name='doctor_login'),
     path('doctor-logout/', DoctorLogoutView.as_view(), name='doctor_logout'),
-
     #doctor
     path('api/patients/<int:doctor_id>/<str:date>/', get_patient_data, name='get_patient_data'),
 ]
