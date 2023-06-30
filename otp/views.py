@@ -8,6 +8,8 @@ from rest_framework.response import Response
 from twilio.rest import Client
 from .models import OTP
 from .serializers import OTPSerializer, SendOTPSerializer
+from django.contrib.auth import authenticate, login, logout
+
 
 @api_view(['POST'])
 def send_otp(request):
@@ -73,7 +75,23 @@ def verify_otp(request):
 
         # Delete the OTP and authenticate the user
         otp.delete()
-        # Authenticate the user using the mobile number (implement your authentication logic here)
+        # Authenticate the user using the mobile number
+        user = authenticate(request, username=mobile_number, password=None)
+
+    #     if user is not None:
+    #         # Login the user
+    #         login(request, user)
+    #
+    #         # ... Your further logic here ...
+    #
+    #         return Response({'detail': 'OTP verified. User authenticated.', 'is_verified': 'true'},
+    #                         status=status.HTTP_200_OK)
+    #     else:
+    #         return Response({'detail': 'User authentication failed.', 'is_verified': 'false'},
+    #                         status=status.HTTP_401_UNAUTHORIZED)
+    # else:
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #     # Authenticate the user using the mobile number (implement your authentication logic here)
 
         return Response({'detail': 'OTP verified. User authenticated.','is_verified':'true'}, status=status.HTTP_200_OK)
     else:
@@ -129,4 +147,9 @@ def send_otp_via_twilio(mobile_number, otp_code):
         from_=settings.TWILIO_PHONE_NUMBER,
         to=mobile_number
     )
-
+# @api_view(['POST'])
+# def logout_view(request):
+#     # Logout the user
+#     logout(request)
+#
+#     return Response({'detail': 'User logged out.'}, status=status.HTTP_200_OK)

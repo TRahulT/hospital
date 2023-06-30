@@ -45,3 +45,59 @@ class PatientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient
         fields = '__all__'
+
+
+
+
+
+
+
+
+
+
+
+
+
+from rest_framework import serializers
+from .models import CustomUser
+
+class SuperUserRegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ('username', 'password', 'user_type')
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'user_type': {'read_only': True}
+        }
+
+class OperatorRegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ('username', 'password', 'user_type')
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'user_type': {'read_only': True}
+        }
+
+class PatientRegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ('mobile_number', 'password', 'user_type')
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'user_type': {'read_only': True}
+        }
+class DoctorRegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ('mobile_number', 'password', 'user_type')
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'user_type': {'read_only': True}
+        }
+
+
+
+class DoctorLoginSerializer(serializers.Serializer):
+    phone_number = serializers.CharField()
+    password = serializers.CharField()

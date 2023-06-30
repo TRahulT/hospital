@@ -1,12 +1,18 @@
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
+from rest_framework.decorators import api_view,authentication_classes,permission_classes
 from .models import Specialty, Doctor, State, District, Village, City
 from .serializers import SpecialtySerializer, DoctorSerializer, StateSerializer, DistrictSerializer, VillageSerializer, \
-    CitySerializer
+    CitySerializer,DoctorLoginSerializer,DoctorRegistrationSerializer
+from rest_framework.authentication import BasicAuthentication
+from rest_framework.permissions import IsAuthenticated, IsAdminUser,AllowAny
+from django.contrib.auth import authenticate, login
+from rest_framework.decorators import api_view
+from django.views.decorators.csrf import csrf_exempt
 
 
 # Specialty views
 @api_view(['GET', 'POST'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([IsAdminUser])
 def specialty_list(request):
     if request.method == 'GET':
         specialties = Specialty.objects.all()
@@ -23,6 +29,8 @@ def specialty_list(request):
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([IsAdminUser])
 def specialty_detail(request, pk):
     try:
         specialty = Specialty.objects.get(pk=pk)
@@ -46,6 +54,8 @@ def specialty_detail(request, pk):
 
 # Doctor views
 @api_view(['GET', 'POST'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([IsAdminUser])
 def doctor_list(request):
     if request.method == 'GET':
         doctors = Doctor.objects.all()
@@ -72,6 +82,8 @@ def doctor_list(request):
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([IsAdminUser])
 def doctor_detail(request, pk):
     try:
         doctor = Doctor.objects.get(pk=pk)
@@ -107,6 +119,8 @@ def doctor_detail(request, pk):
 
 # State views
 @api_view(['GET', 'POST'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([IsAdminUser])
 def state_list(request):
     if request.method == 'GET':
         states = State.objects.all()
@@ -121,6 +135,8 @@ def state_list(request):
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([IsAdminUser])
 def state_detail(request, pk):
     try:
         state = State.objects.get(pk=pk)
@@ -143,6 +159,8 @@ def state_detail(request, pk):
 
 # District views
 @api_view(['GET', 'POST'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([IsAdminUser])
 def district_list(request):
     if request.method == 'GET':
         districts = District.objects.all()
@@ -157,6 +175,8 @@ def district_list(request):
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([IsAdminUser])
 def district_detail(request, pk):
     try:
         district = District.objects.get(pk=pk)
@@ -179,6 +199,8 @@ def district_detail(request, pk):
 
 # Village views
 @api_view(['GET', 'POST'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([IsAdminUser])
 def village_list(request):
     if request.method == 'GET':
         villages = Village.objects.all()
@@ -193,6 +215,8 @@ def village_list(request):
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([IsAdminUser])
 def village_detail(request, pk):
     try:
         village = Village.objects.get(pk=pk)
@@ -215,6 +239,8 @@ def village_detail(request, pk):
 
 # City views
 @api_view(['GET', 'POST'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([IsAdminUser])
 def city_list(request):
     if request.method == 'GET':
         cities = City.objects.all()
@@ -229,6 +255,8 @@ def city_list(request):
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([IsAdminUser])
 def city_detail(request, pk):
     try:
         city = City.objects.get(pk=pk)
@@ -259,12 +287,13 @@ def get_districts_by_state(request, state_id):
 
 
 from rest_framework.decorators import api_view
-from rest_framework.response import Response
 from .models import Patient
 from .serializers import PatientSerializer
 
 
 @api_view(['GET'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([AllowAny])
 def get_patients(request):
     patients = Patient.objects.all()
     serializer = PatientSerializer(patients, many=True)
@@ -272,6 +301,8 @@ def get_patients(request):
 
 
 @api_view(['GET'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def get_patient(request, pk):
     patient = Patient.objects.get(id=pk)
     serializer = PatientSerializer(patient)
@@ -279,6 +310,8 @@ def get_patient(request, pk):
 
 
 @api_view(['POST'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([IsAdminUser])
 def create_patient(request):
     serializer = PatientSerializer(data=request.data)
     if serializer.is_valid():
@@ -302,9 +335,11 @@ def create_patient(request):
 
 
 @api_view(['PUT','PATCH'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def update_patient(request, pk):
     patient = Patient.objects.get(id=pk)
-    serializer = PatientSerializer(instance=patient, data=request.data)
+    serializer = PatientSerializer(instance=patient, data=request.data,partial=True)
     if serializer.is_valid():
         name = serializer.validated_data['name']
         fh_name = serializer.validated_data['fh_name']
@@ -320,13 +355,167 @@ def update_patient(request, pk):
         delmark= serializer.validated_data['delmark']
         modifiedBy = serializer.validated_data['modifiedBy']
         ipAddress = serializer.validated_data.get('ipAddress') # Get the client IP address
-        serializer.save()  # Set the IP address during save
+        serializer.save(modifiedBy=request.user)  # Set the IP address during save
         return Response(serializer.data)
     return Response(serializer.errors, status=400)
 
 
+
+
 @api_view(['DELETE'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([IsAdminUser])
 def delete_patient(request, pk):
     patient = Patient.objects.get(id=pk)
     patient.delete()
     return Response(status=204)
+
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from .models import CustomUser
+from .serializers import SuperUserRegistrationSerializer, OperatorRegistrationSerializer, PatientRegistrationSerializer
+@csrf_exempt
+@api_view(['POST'])
+def create_superuser(request):
+    serializer = SuperUserRegistrationSerializer(data=request.data)
+    if serializer.is_valid():
+        user = CustomUser.objects.create_superuser(
+            username=serializer.validated_data['username'],
+            password=serializer.validated_data['password'],
+            user_type='admin',
+            is_staff=True
+        )
+        return Response({'message': 'Superuser created successfully.'}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+@csrf_exempt
+@api_view(['POST'])
+def create_operator(request):
+    serializer = OperatorRegistrationSerializer(data=request.data)
+    if serializer.is_valid():
+        user = CustomUser.objects.create_user(
+            username=serializer.validated_data['username'],
+            password=serializer.validated_data['password'],
+            user_type='operator',
+            is_staff=True
+        )
+        return Response({'message': 'Operator created successfully.'}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+@csrf_exempt
+@api_view(['POST'])
+def Create_patient(request):
+    serializer = PatientRegistrationSerializer(data=request.data)
+    if serializer.is_valid():
+        username = serializer.validated_data['mobile_number']
+        password = serializer.validated_data['password']
+        user = CustomUser.objects.create_user(
+            username=username,
+            mobile_number=username,
+            password=password,
+            user_type='patient'
+        )
+        return Response({'message': 'Patient created successfully.',"registerd":"true"}, status=status.HTTP_201_CREATED)
+    return Response({"msg":"Account already exists with this mobile number","status":"false"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+@csrf_exempt
+@api_view(['POST'])
+def patient_login(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+
+    user = authenticate(username=username, password=password)
+
+    if user is not None and user.is_active and user.user_type == 'patient':
+        login(request, user)
+        return Response({'message': 'Patient login successful.'}, status=status.HTTP_200_OK)
+    else:
+        return Response({'message': 'Invalid username or password.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+from rest_framework.views import APIView
+
+
+class DoctorLoginView(APIView):
+    def post(self, request, format=None):
+        serializer = DoctorLoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        phone_number = serializer.validated_data['phone_number']
+        password = serializer.validated_data['password']
+
+        try:
+            doctor = Doctor.objects.get(phone_number=phone_number)
+            print(doctor.password)
+            print(password)
+
+            if password==doctor.password:
+                request.session['doctor_id'] = doctor.Doctorid
+                return Response({'detail': 'Login successful.'})
+            else:
+                return Response({'detail': 'Invalid number or password.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        except Doctor.DoesNotExist:
+            return Response({'detail': 'does  not exist .'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DoctorLogoutView(APIView):
+    def post(self, request, format=None):
+        if 'doctor_id' in request.session:
+            del request.session['doctor_id']
+
+        return Response({'detail': 'Logged out successfully.'})
+
+
+
+# @api_view(['GET'])
+# @authentication_classes([BasicAuthentication])
+# @permission_classes([AllowAny])
+# def get_patient(request, pk ,mk):
+#     patients = Patient.objects.filter(doctor=mk, date=pk)
+#     serializer = PatientSerializer(patients)
+#     return Response(serializer.data)
+#
+from datetime import datetime
+@api_view(['GET'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([AllowAny])
+def get_patient_data(request, doctor_id, date):
+    try:
+        # Convert the date string to a datetime object
+        search_date = datetime.strptime(date, '%Y-%m-%d').date()
+
+        # Fetch all patients with matching doctor ID and date
+        patients = Patient.objects.filter(doctor_id=doctor_id, date=search_date)
+
+        # Serialize the patient data
+        serialized_patients = []
+        for patient in patients:
+            serialized_patients.append({
+                'id': patient.id,
+                'name': patient.name,
+                'dob': patient.dob,
+                # Add more fields as needed
+            })
+
+        return Response(serialized_patients)
+    except ValueError:
+        return Response({'error': 'Invalid date format. Please provide the date in the format "YYYY-MM-DD".'})
+
+# @csrf_exempt
+# @api_view(['POST'])
+# def Create_doctor(request):
+#     serializer = DoctorRegistrationSerializer(data=request.data)
+#     if serializer.is_valid():
+#         # username = serializer.validated_data['username']
+#         password = serializer.validated_data['password']
+#         user = CustomUser.objects.create_user(
+#             username=serializer.validated_data['username'],
+#             password=password,
+#             user_type='doctor'
+#         )
+#         return Response({'message': 'doctor created successfully.',"registerd":"true"}, status=status.HTTP_201_CREATED)
+#     return Response({"msg":"Account already exists with this mobile number","status":"false"}, status=status.HTTP_400_BAD_REQUEST)
+

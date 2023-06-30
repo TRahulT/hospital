@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -24,18 +24,19 @@ SECRET_KEY = 'django-insecure-lbeb(nem!&m)*8_4ht3gcx#3yfpjk4s0698$)j=0y9=cvk#e_3
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
-
+# 'localhost','TRahulT.pythonanywhere.com'
 ALLOWED_HOSTS = ['localhost','TRahulT.pythonanywhere.com']
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    # 'jazzmin',
+    #'jazzmin',
     'django.contrib.admin',
     'rest_framework',
     'twilio',
     'otp',
+    # 'user',
     'OPD1',
     'corsheaders',
     'django.contrib.auth',
@@ -48,7 +49,7 @@ INSTALLED_APPS = [
 
 # Twilio settings
 TWILIO_ACCOUNT_SID = "AC12a0e08ab76623c8f7a28d70b2fd75e8"
-TWILIO_AUTH_TOKEN = 'e643c36f9d82ad878c1ce0b5c1aa62f6'
+TWILIO_AUTH_TOKEN = '2b02d97f51abcf248aba0317253666ca'
 TWILIO_PHONE_NUMBER = "+13613155789"
 
 # Cache backend settings (using the in-memory cache for simplicity, you can use a different cache backend in production)
@@ -61,9 +62,10 @@ CACHES = {
 
 
 MIDDLEWARE = [
-
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    # i used this CSRF
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -140,6 +142,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT= os.path.join(BASE_DIR,'static')
+# STATICFILES_FINDERS = (
+#     'django.contrib.staticfiles.finders.FileSystemFinder',
+#     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+#     'compressor.finders.CompressorFinder',
+# )
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -164,3 +172,12 @@ CORS_ORIGIN_ALLOW_ALL = True
 #  '*',
 # ]
 CORS_ALLOW_CREDENTIALS = True
+
+# for locally
+
+CSRF_COOKIE_SECURE = False
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ]
+}

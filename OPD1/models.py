@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, User
 from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
@@ -6,9 +6,15 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from django.contrib import admin
+
 class CustomUser(AbstractUser):
-    # Add your additional fields here
-    is_limited_user = models.BooleanField(default=False)
+    USER_TYPE_CHOICES = (
+        ('admin', 'Admin'),
+        ('operator', 'Operator'),
+        ('patient', 'Patient'),
+    )
+    user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES)
+    mobile_number = models.CharField(max_length=15, unique=True , null=True, blank=True)
 
 
 class CustomAutoField(models.AutoField):
@@ -113,10 +119,13 @@ class Patient(models.Model):
     city = models.ForeignKey(City, on_delete=models.CASCADE, blank=True, null=True)
     village = models.ForeignKey(Village, on_delete=models.CASCADE, blank=True, null=True)
     address = models.CharField(max_length=200)
-    inputDate=models.DateTimeField(auto_now=True)
+    date=models.DateField(auto_now=True)
+    inputDate=models.CharField(max_length=20)
     inputBy=models.CharField(max_length=50 ,null=True,blank=True )
     delmark=models.BooleanField(default=True)
-    modifiedBy=models.ForeignKey(get_user_model(), on_delete=models.CASCADE, blank=True, null=True)
+    speciality=models.ForeignKey(Specialty,on_delete=models.CASCADE)
+    doctor=models.ForeignKey(Doctor,on_delete=models.CASCADE)
+    modifiedBy=models.ForeignKey(CustomUser, on_delete=models.SET_NULL, blank=True, null=True)
     modifiedTime=models.DateTimeField(blank=True, null=True)
     ipAddress=models.GenericIPAddressField(default='192.168.0.1')
     Searchablefield = ['id', 'name', 'phone_number']
@@ -129,13 +138,39 @@ class Patient(models.Model):
         if not self.inputBy:
             self.inputBy = self.name
         super().save(*args, **kwargs)
+        if self.pk is not None:
+            original = Patient.objects.get(pk=self.pk)
+            if original.inputDate:
+                self.inputDate = original.inputDate
+        super().save(*args, **kwargs)
 
-    def save_model(self, request: HttpRequest, obj: admin.ModelAdmin, form: admin.ModelAdmin, change: bool):
-        if not change:
-            # Set the modifiedBy field only when creating a new object
-            self.modifiedBy = request.user
-        super().save_model(request, obj, form, change)
+    # def save(self, *args, **kwargs):
+    #     if not self.inputBy:
+    #         self.inputBy = self.name
+    #
+    #     if self.pk and not self.modifiedBy:
+    #         # Get the current logged-in user
+    #         user = User.objects.get(username=self._get_current_username())
+    #
+    #         # Set the modifiedBy field to the user
+    #         self.modifiedBy = user
+    #
+    #     super().save(*args, **kwargs)
 
+    # def _get_current_username(self):
+    #     # Assuming you have access to the Django request object
+    #     # and you are using Django's built-in authentication system
+    #
+    #     # Check if the request object is available
+    #     if hasattr(self, 'request') and self.request is not None:
+    #         # Assuming you have a request object available in the model instance
+    #         # and the user is authenticated
+    #         if self.request.user.is_authenticated:
+    #             # Retrieve the username from the authenticated user
+    #             return self.request.user.username
+    #
+    #     # If the request object is not available or the user is not authenticated, return a default value or handle the case as per your requirement
+    #     return "default_username"
 
 
 @receiver(pre_save, sender=Patient)
