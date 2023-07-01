@@ -6,6 +6,8 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from django.contrib import admin
+import uuid
+
 
 class CustomUser(AbstractUser):
     USER_TYPE_CHOICES = (
@@ -17,13 +19,6 @@ class CustomUser(AbstractUser):
     mobile_number = models.CharField(max_length=15, unique=True , null=True, blank=True)
 
 
-class CustomAutoField(models.AutoField):
-    def get_next_value(self, *args, **kwargs):
-        if self.model.objects.exists():
-            last_district_id = self.model.objects.order_by('-id').first().id
-            return last_district_id + 1
-        else:
-            return 10000
 
 
 class Specialty(models.Model):
@@ -96,8 +91,8 @@ class City(models.Model):
         return self.City_name
 
 
-class Patient(models.Model):
-    id = models.AutoField(primary_key=True)
+class Patients(models.Model):
+    Uid = models.CharField(max_length=5, unique=True,null=True,blank=True)
     name = models.CharField(max_length=50)
     fh_name = models.CharField(max_length=50)
     dob = models.DateField()
@@ -120,7 +115,7 @@ class Patient(models.Model):
     village = models.ForeignKey(Village, on_delete=models.CASCADE, blank=True, null=True)
     address = models.CharField(max_length=200)
     date=models.DateField(auto_now=True)
-    inputDate=models.CharField(max_length=20)
+    inputDate=models.CharField(max_length=30)
     inputBy=models.CharField(max_length=50 ,null=True,blank=True )
     delmark=models.BooleanField(default=True)
     speciality=models.ForeignKey(Specialty,on_delete=models.CASCADE)
@@ -128,18 +123,20 @@ class Patient(models.Model):
     modifiedBy=models.ForeignKey(CustomUser, on_delete=models.SET_NULL, blank=True, null=True)
     modifiedTime=models.DateTimeField(blank=True, null=True)
     ipAddress=models.GenericIPAddressField(default='192.168.0.1')
-    Searchablefield = ['id', 'name', 'phone_number']
+    Searchablefield = ['Uid', 'name', 'phone_number']
     FilterFields = ['state']
 
     def __str__(self):
         return self.name
 
     def save(self, *args, **kwargs):
+        if not self.Uid:  # Generate Uid only if it's not already set
+            self.Uid = str(uuid.uuid4())[:5]
+
         if not self.inputBy:
             self.inputBy = self.name
-        super().save(*args, **kwargs)
         if self.pk is not None:
-            original = Patient.objects.get(pk=self.pk)
+            original = Patients.objects.get(pk=self.pk)
             if original.inputDate:
                 self.inputDate = original.inputDate
         super().save(*args, **kwargs)
@@ -173,7 +170,7 @@ class Patient(models.Model):
     #     return "default_username"
 
 
-@receiver(pre_save, sender=Patient)
+@receiver(pre_save, sender=Patients)
 def update_modified_time(sender, instance, **kwargs):
     if instance.pk:  # Check if the instance already exists
         instance.modifiedTime = timezone.now()

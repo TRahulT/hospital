@@ -7,14 +7,16 @@ from .views import (
     village_list, village_detail,
     city_list, city_detail,get_districts_by_state,
 
-    get_patients,get_patient,create_patient, update_patient,delete_patient,
+    get_patients,get_patient,CreatePatientView, update_patient,delete_patient,
     get_patient_data,
     # users
     create_superuser, create_operator,operator_login, change_password,operator_logout,
     Create_patient,patient_login,DoctorLoginView,DoctorLogoutView
+#,pdf_export_preview
 )
 
 urlpatterns = [
+    # path('admin/patient/pdf_export_preview/pdf-preview/', pdf_export_preview, name='pdf_export_preview'),
     path('specialties/', specialty_list, name='specialty-list'),
     path('specialties/<int:pk>/', specialty_detail, name='specialty-detail'),
     path('doctors/', doctor_list, name='doctor-list'),
@@ -32,12 +34,12 @@ urlpatterns = [
 
     # Patient data
     path('patients/', get_patients, name='get_patients'),
-    path('patients/<int:pk>/', get_patient, name='get_patient'),
+    path('patients/<str:pk>/', get_patient, name='get_patient'),
 
     # path('doctor_patient/', get_doctor_patient, name='get_patient'),
-    path('patients/create/', create_patient, name='create_patient'),
-    path('patients/<int:pk>/update/', update_patient, name='update_patient'),
-    path('patients/<int:pk>/delete/', delete_patient, name='delete_patient'),
+    path('create_patient/', CreatePatientView.as_view(), name='create_patient'),
+    path('patients/<str:pk>/update/', update_patient, name='update_patient'),
+    path('patients/<str:pk>/delete/', delete_patient, name='delete_patient'),
 
 
     # Register

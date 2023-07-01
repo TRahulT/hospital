@@ -38,12 +38,12 @@ class CitySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-from .models import Patient
+from .models import Patients
 
 
 class PatientSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Patient
+        model = Patients
         fields = '__all__'
 
 

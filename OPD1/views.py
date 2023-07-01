@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate, login, logout
 from rest_framework.decorators import api_view
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.hashers import check_password
-
+from rest_framework.views import APIView
 # Specialty views
 @api_view(['GET', 'POST'])
 @authentication_classes([BasicAuthentication])
@@ -288,7 +288,7 @@ def get_districts_by_state(request, state_id):
 
 
 from rest_framework.decorators import api_view
-from .models import Patient
+from .models import Patients
 from .serializers import PatientSerializer
 
 
@@ -296,7 +296,7 @@ from .serializers import PatientSerializer
 @authentication_classes([BasicAuthentication])
 @permission_classes([AllowAny])
 def get_patients(request):
-    patients = Patient.objects.all()
+    patients = Patients.objects.all()
     serializer = PatientSerializer(patients, many=True)
     return Response(serializer.data)
 
@@ -305,43 +305,69 @@ def get_patients(request):
 @authentication_classes([BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def get_patient(request, pk):
-    patient = Patient.objects.get(id=pk)
+    patient = Patients.objects.get(Uid=pk)
     serializer = PatientSerializer(patient)
     return Response(serializer.data)
 
+class CreatePatientView(APIView):
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [IsAdminUser]
 
-@api_view(['POST'])
-@authentication_classes([BasicAuthentication])
-@permission_classes([IsAdminUser])
-def create_patient(request):
-    serializer = PatientSerializer(data=request.data)
-    if serializer.is_valid():
-        name = serializer.validated_data['name']
-        fh_name = serializer.validated_data['fh_name']
-        dob = serializer.validated_data['dob']
-        gender = serializer.validated_data['gender']
-        category = serializer.validated_data['category']
-        phone_number = serializer.validated_data['phone_number']
-        state = serializer.validated_data['state']
-        district = serializer.validated_data['district']
-        city = serializer.validated_data['city']
-        village = serializer.validated_data['village']
-        address = serializer.validated_data['address']
-        delmark = serializer.validated_data['delmark']
-        speciality=serializer.validated_data['speciality']
-        doctor= serializer.validated_data['doctor']
-        modifiedBy = serializer.validated_data['modifiedBy']
-        ipAddress = serializer.validated_data.get('ipAddress')
-        serializer.save()  # Set the IP address during save
-        return Response(serializer.data, status=201)
-    return Response(serializer.errors, status=400)
+    def post(self, request):
+        serializer = PatientSerializer(data=request.data)
+        if serializer.is_valid():
+            # name = serializer.validated_data['name']
+            # fh_name = serializer.validated_data['fh_name']
+            # dob = serializer.validated_data['dob']
+            # gender = serializer.validated_data['gender']
+            # category = serializer.validated_data['category']
+            # phone_number = serializer.validated_data['phone_number']
+            # state = serializer.validated_data['state']
+            # district = serializer.validated_data['district']
+            # city = serializer.validated_data['city']
+            # village = serializer.validated_data['village']
+            # address = serializer.validated_data['address']
+            # delmark = serializer.validated_data['delmark']
+            # speciality = serializer.validated_data['speciality']
+            # doctor = serializer.validated_data['doctor']
+            # modifiedBy = serializer.validated_data['modifiedBy']
+            # ipAddress = serializer.validated_data.get('ipAddress')
+            serializer.save()  # Set the IP address during save
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+
+# @api_view(['POST'])
+# @authentication_classes([BasicAuthentication])
+# @permission_classes([IsAdminUser])
+# def create_patient(request):
+#     serializer = PatientSerializer(data=request.data)
+#     if serializer.is_valid():
+#         name = serializer.validated_data['name']
+#         fh_name = serializer.validated_data['fh_name']
+#         dob = serializer.validated_data['dob']
+#         gender = serializer.validated_data['gender']
+#         category = serializer.validated_data['category']
+#         phone_number = serializer.validated_data['phone_number']
+#         state = serializer.validated_data['state']
+#         district = serializer.validated_data['district']
+#         city = serializer.validated_data['city']
+#         village = serializer.validated_data['village']
+#         address = serializer.validated_data['address']
+#         delmark = serializer.validated_data['delmark']
+#         speciality=serializer.validated_data['speciality']
+#         doctor= serializer.validated_data['doctor']
+#         modifiedBy = serializer.validated_data['modifiedBy']
+#         ipAddress = serializer.validated_data.get('ipAddress')
+#         serializer.save()  # Set the IP address during save
+#         return Response(serializer.data, status=201)
+#     return Response(serializer.errors, status=400)
 
 
 @api_view(['PUT','PATCH'])
 @authentication_classes([BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def update_patient(request, pk):
-    patient = Patient.objects.get(id=pk)
+    patient = Patients.objects.get(Uid=pk)
     serializer = PatientSerializer(instance=patient, data=request.data,partial=True)
     if serializer.is_valid():
         name = serializer.validated_data['name']
@@ -357,7 +383,7 @@ def update_patient(request, pk):
         address = serializer.validated_data['address']
         delmark= serializer.validated_data['delmark']
         modifiedBy = serializer.validated_data['modifiedBy']
-        ipAddress = serializer.validated_data.get('ipAddress') # Get the client IP address
+        ipAddress = serializer.validated_data.get('ipAddress')
         serializer.save(modifiedBy=request.user)  # Set the IP address during save
         return Response(serializer.data)
     return Response(serializer.errors, status=400)
@@ -367,9 +393,9 @@ def update_patient(request, pk):
 
 @api_view(['DELETE'])
 @authentication_classes([BasicAuthentication])
-@permission_classes([IsAdminUser])
+@permission_classes([AllowAny])
 def delete_patient(request, pk):
-    patient = Patient.objects.get(id=pk)
+    patient = Patients.objects.get(Uid=pk)
     patient.delete()
     return Response(status=204)
 
@@ -403,10 +429,10 @@ def create_operator(request):
             user_type='operator',
             is_staff=True
         )
-        permissions = ['view_patient', 'add_patient', 'change_patient', 'delete_patient']
-        for permission_codename in permissions:
-            permission = Permission.objects.get(codename=permission_codename)
-            user.user_permissions.add(permission)
+        # permissions = ['view_patient', 'add_patient', 'change_patient', 'delete_patient']
+        # for permission_codename in permissions:
+        #     permission = Permission.objects.get(codename=permission_codename)
+        #     user.user_permissions.add(permission)
         return Response({'message': 'Operator created successfully.'}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -521,14 +547,6 @@ class DoctorLogoutView(APIView):
         return Response({'detail': 'Logged out successfully.'})
 
 
-
-# @api_view(['GET'])
-# @authentication_classes([BasicAuthentication])
-# @permission_classes([AllowAny])
-# def get_patient(request, pk ,mk):
-#     patients = Patient.objects.filter(doctor=mk, date=pk)
-#     serializer = PatientSerializer(patients)
-#     return Response(serializer.data)
 #
 from datetime import datetime
 @api_view(['GET'])
@@ -540,13 +558,13 @@ def get_patient_data(request, doctor_id, date):
         search_date = datetime.strptime(date, '%Y-%m-%d').date()
 
         # Fetch all patients with matching doctor ID and date
-        patients = Patient.objects.filter(doctor_id=doctor_id, date=search_date)
+        patients = Patients.objects.filter(doctor_id=doctor_id, date=search_date)
 
         # Serialize the patient data
         serialized_patients = []
         for patient in patients:
             serialized_patients.append({
-                'id': patient.id,
+                'Uid': patient.Uid,
                 'name': patient.name,
                 'dob': patient.dob,
                 # Add more fields as needed
@@ -555,19 +573,4 @@ def get_patient_data(request, doctor_id, date):
         return Response(serialized_patients)
     except ValueError:
         return Response({'error': 'Invalid date format. Please provide the date in the format "YYYY-MM-DD".'})
-
-# @csrf_exempt
-# @api_view(['POST'])
-# def Create_doctor(request):
-#     serializer = DoctorRegistrationSerializer(data=request.data)
-#     if serializer.is_valid():
-#         # username = serializer.validated_data['username']
-#         password = serializer.validated_data['password']
-#         user = CustomUser.objects.create_user(
-#             username=serializer.validated_data['username'],
-#             password=password,
-#             user_type='doctor'
-#         )
-#         return Response({'message': 'doctor created successfully.',"registerd":"true"}, status=status.HTTP_201_CREATED)
-#     return Response({"msg":"Account already exists with this mobile number","status":"false"}, status=status.HTTP_400_BAD_REQUEST)
 

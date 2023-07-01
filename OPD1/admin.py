@@ -8,22 +8,22 @@ from .models import State, District, City, Village
 
 
 from django.contrib import admin
-from .models import Specialty, Doctor, State, District, Village, City, Patient,CustomUser
+from .models import Specialty, Doctor, State, District, Village, City, Patients,CustomUser
 
 admin.site.register(CustomUser)
 
 
 class PatientAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'name', 'fh_name', 'dob', 'gender', 'category', 'phone_number', 'state', 'district', 'city', 'village',
+        'Uid', 'name', 'fh_name', 'dob', 'gender', 'category', 'phone_number', 'state', 'district', 'city', 'village',
         'address','date', 'inputDate', 'inputBy', 'delmark','speciality','doctor', 'modifiedBy', 'modifiedTime','ipAddress')
 
-    search_fields = Patient.Searchablefield
-    list_filter = Patient.FilterFields
+    search_fields = Patients.Searchablefield
+    list_filter = Patients.FilterFields
 
 
 
-admin.site.register(Patient, PatientAdmin)
+admin.site.register(Patients, PatientAdmin)
 
 
 @admin.register(Specialty)
