@@ -316,51 +316,10 @@ class CreatePatientView(APIView):
     def post(self, request):
         serializer = PatientSerializer(data=request.data)
         if serializer.is_valid():
-            # name = serializer.validated_data['name']
-            # fh_name = serializer.validated_data['fh_name']
-            # dob = serializer.validated_data['dob']
-            # gender = serializer.validated_data['gender']
-            # category = serializer.validated_data['category']
-            # phone_number = serializer.validated_data['phone_number']
-            # state = serializer.validated_data['state']
-            # district = serializer.validated_data['district']
-            # city = serializer.validated_data['city']
-            # village = serializer.validated_data['village']
-            # address = serializer.validated_data['address']
-            # delmark = serializer.validated_data['delmark']
-            # speciality = serializer.validated_data['speciality']
-            # doctor = serializer.validated_data['doctor']
-            # modifiedBy = serializer.validated_data['modifiedBy']
-            # ipAddress = serializer.validated_data.get('ipAddress')
             serializer.save()  # Set the IP address during save
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
-# @api_view(['POST'])
-# @authentication_classes([BasicAuthentication])
-# @permission_classes([IsAdminUser])
-# def create_patient(request):
-#     serializer = PatientSerializer(data=request.data)
-#     if serializer.is_valid():
-#         name = serializer.validated_data['name']
-#         fh_name = serializer.validated_data['fh_name']
-#         dob = serializer.validated_data['dob']
-#         gender = serializer.validated_data['gender']
-#         category = serializer.validated_data['category']
-#         phone_number = serializer.validated_data['phone_number']
-#         state = serializer.validated_data['state']
-#         district = serializer.validated_data['district']
-#         city = serializer.validated_data['city']
-#         village = serializer.validated_data['village']
-#         address = serializer.validated_data['address']
-#         delmark = serializer.validated_data['delmark']
-#         speciality=serializer.validated_data['speciality']
-#         doctor= serializer.validated_data['doctor']
-#         modifiedBy = serializer.validated_data['modifiedBy']
-#         ipAddress = serializer.validated_data.get('ipAddress')
-#         serializer.save()  # Set the IP address during save
-#         return Response(serializer.data, status=201)
-#     return Response(serializer.errors, status=400)
 
 
 @api_view(['PUT','PATCH'])
