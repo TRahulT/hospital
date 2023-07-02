@@ -11,7 +11,7 @@ from .views import (
     get_patient_data,
     # users
     create_superuser, create_operator,operator_login, change_password,operator_logout,
-    Create_patient,patient_login,DoctorLoginView,DoctorLogoutView
+    Create_patient,patient_login,DoctorLoginView,DoctorLogoutView,get_csrf_token
 #,pdf_export_preview
 )
 
@@ -45,16 +45,21 @@ urlpatterns = [
     # Register
     path('register/superuser/', create_superuser, name='register_superuser'),
     path('register/operator/', create_operator, name='register_operator'),
+    path('register/patient/', Create_patient, name='register_patient'),
+
+    path('login/patient/', patient_login, name='patient_login'),
+
     path('operator/login/', operator_login, name='operator_login'),
     path('operator/logout/', operator_logout, name='operator_logout'),
     path('operator/change_password/', change_password, name='change_password'),
-    path('register/patient/', Create_patient, name='register_patient'),
+
     # path('register/doctor/',Create_doctor,name='register_doctor'),
 
     # login Patient
-    path('login/patient/', patient_login, name='patient_login'),
+
     path('doctor-login/', DoctorLoginView.as_view(), name='doctor_login'),
     path('doctor-logout/', DoctorLogoutView.as_view(), name='doctor_logout'),
     #doctor
     path('api/patients/<int:doctor_id>/<str:date>/', get_patient_data, name='get_patient_data'),
+    path('get_csrf_token/', get_csrf_token, name='get_csrf_token'),
 ]

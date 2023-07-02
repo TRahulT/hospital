@@ -490,12 +490,12 @@ class DoctorLoginView(APIView):
 
             if password==doctor.password:
                 request.session['doctor_id'] = doctor.Doctorid
-                return Response({'detail': 'Login successful.'})
+                return Response({'detail': 'Login successful.','is_loged':True})
             else:
-                return Response({'detail': 'Invalid number or password.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'detail': 'Invalid number or password.','is_loged':False}, status=status.HTTP_400_BAD_REQUEST)
 
         except Doctor.DoesNotExist:
-            return Response({'detail': 'does  not exist .'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': 'does  not exist .','is_loged':False}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class DoctorLogoutView(APIView):
@@ -517,7 +517,7 @@ def get_patient_data(request, doctor_id, date):
         search_date = datetime.strptime(date, '%Y-%m-%d').date()
 
         # Fetch all patients with matching doctor ID and date
-        patients = Patients.objects.filter(doctor_id=doctor_id, date=search_date)
+        patients = Patients.objects.filter(doctor_id=doctor_id, date=search_date,payment_status=True)
 
         # Serialize the patient data
         serialized_patients = []
@@ -526,6 +526,7 @@ def get_patient_data(request, doctor_id, date):
                 'Uid': patient.Uid,
                 'name': patient.name,
                 'dob': patient.dob,
+                'inputDate' : patient.inputDate,
                 # Add more fields as needed
             })
 
@@ -533,3 +534,11 @@ def get_patient_data(request, doctor_id, date):
     except ValueError:
         return Response({'error': 'Invalid date format. Please provide the date in the format "YYYY-MM-DD".'})
 
+from django.http import JsonResponse
+from django.middleware.csrf import get_token
+
+def get_csrf_token(request):
+    csrf_token = get_token(request)
+    response = JsonResponse({'csrf_token': csrf_token})
+    response["Access-Control-Allow-Origin"] = "*"  # Allow requests from any origin
+    return response

@@ -15,8 +15,8 @@ admin.site.register(CustomUser)
 
 class PatientAdmin(admin.ModelAdmin):
     list_display = (
-        'Uid', 'name', 'fh_name', 'dob', 'gender', 'category', 'phone_number', 'state', 'district', 'city', 'village',
-        'address','date', 'inputDate', 'inputBy', 'delmark','speciality','doctor', 'modifiedBy', 'modifiedTime','ipAddress')
+        'Uid', 'name', 'fh_name', 'dob', 'gender', 'category', 'phone_number','aternate_number', 'state', 'district', 'city', 'village',
+        'address','date', 'inputDate', 'inputBy', 'delmark','speciality','doctor', 'modifiedBy', 'modifiedTime','opd_fee','payment_type','payment_status','extra_field', 'ipAddress')
 
     search_fields = Patients.Searchablefield
     list_filter = Patients.FilterFields

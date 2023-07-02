@@ -92,7 +92,7 @@ class City(models.Model):
 
 
 class Patients(models.Model):
-    Uid = models.CharField(max_length=5, unique=True,null=True,blank=True)
+    Uid = models.CharField(max_length=5, unique=True, null=True, blank=True)
     name = models.CharField(max_length=50)
     fh_name = models.CharField(max_length=50)
     dob = models.DateField()
@@ -109,20 +109,26 @@ class Patients(models.Model):
     )
     category = models.CharField(max_length=5, choices=CATEGORY_CHOICES)
     phone_number = models.IntegerField()
+    aternate_number = models.IntegerField(blank=True, null=True)
     state = models.ForeignKey(State, on_delete=models.CASCADE)
     district = models.ForeignKey(District, on_delete=models.CASCADE)
     city = models.ForeignKey(City, on_delete=models.CASCADE, blank=True, null=True)
     village = models.ForeignKey(Village, on_delete=models.CASCADE, blank=True, null=True)
     address = models.CharField(max_length=200)
-    date=models.DateField(auto_now=True)
-    inputDate=models.CharField(max_length=30)
-    inputBy=models.CharField(max_length=50 ,null=True,blank=True )
-    delmark=models.BooleanField(default=True)
-    speciality=models.ForeignKey(Specialty,on_delete=models.CASCADE)
-    doctor=models.ForeignKey(Doctor,on_delete=models.CASCADE)
-    modifiedBy=models.ForeignKey(CustomUser, on_delete=models.SET_NULL, blank=True, null=True)
-    modifiedTime=models.DateTimeField(blank=True, null=True)
-    ipAddress=models.GenericIPAddressField(default='192.168.0.1')
+    date = models.DateField(auto_now=True)
+    inputDate = models.CharField(max_length=30)
+    inputBy = models.CharField(max_length=50, null=True,blank=True)
+    delmark = models.BooleanField(default=True)
+    speciality = models.ForeignKey(Specialty, on_delete=models.CASCADE)
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
+    modifiedBy = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, blank=True, null=True)
+    modifiedTime = models.DateTimeField(blank=True, null=True)
+    opd_fee = models.IntegerField()
+    payment_type = models.CharField(max_length=30)
+    payment_status = models.BooleanField(default=False)
+    ipAddress = models.GenericIPAddressField(default='192.168.0.1')
+    extra_field=models.CharField(max_length=100, blank=True, null=True)
+    extra_field2 = models.CharField(max_length=100, blank=True, null=True)
     Searchablefield = ['Uid', 'name', 'phone_number']
     FilterFields = ['state']
 
@@ -176,6 +182,5 @@ def update_modified_time(sender, instance, **kwargs):
         instance.modifiedTime = timezone.now()
     else:
         instance.modifiedTime = None
-
 
 
