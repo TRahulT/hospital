@@ -12,7 +12,7 @@ from .views import (
     # users
     create_superuser, create_operator,operator_login, change_password,operator_logout,
     Create_patient,patient_login,DoctorLoginView,DoctorLogoutView,get_csrf_token
-#,pdf_export_preview
+
 )
 
 urlpatterns = [
@@ -43,7 +43,7 @@ urlpatterns = [
 
 
     # Register
-    path('register/superuser/', create_superuser, name='register_superuser'),
+    # path('register/superuser/', create_superuser, name='register_superuser'),
     path('register/operator/', create_operator, name='register_operator'),
     path('register/patient/', Create_patient, name='register_patient'),
 
