@@ -23,9 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-lbeb(nem!&m)*8_4ht3gcx#3yfpjk4s0698$)j=0y9=cvk#e_3'
 # APPEND_SLASH = False
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 # 'localhost','TRahulT.pythonanywhere.com'
-ALLOWED_HOSTS = ['localhost','titsbhiwani.ac.in/hospisoft']
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -109,9 +109,9 @@ WSGI_APPLICATION = 'src.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'titsbls6_hosp',
-        'USER': 'titsbls6_hosp',
-        'PASSWORD': 'Hosp@1234$',
+        'NAME': 'hospital',
+        'USER': 'root',
+        'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '3306',
     }
