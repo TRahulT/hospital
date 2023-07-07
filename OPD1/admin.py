@@ -8,22 +8,32 @@ from .models import State, District, City, Village
 
 
 from django.contrib import admin
-from .models import Specialty, Doctor, State, District, Village, City, Patients,CustomUser
+from .models import Specialty, Doctor, State, District, Village, City, Patients, CustomUser, OPD_Table
 
 admin.site.register(CustomUser)
 
 
 class PatientAdmin(admin.ModelAdmin):
     list_display = (
-        'Uid', 'name', 'fh_name', 'dob', 'gender', 'category', 'phone_number','aternate_number', 'state', 'district', 'city', 'village',
-        'address','date', 'inputDate', 'inputBy', 'delmark','speciality','doctor', 'modifiedBy', 'modifiedTime','opd_fee','payment_type','payment_status','extra_field', 'ipAddress')
+        'id', 'name', 'fh_name', 'dob', 'gender', 'category', 'phone_number', 'aternate_number', 'state', 'district',
+        'city', 'village',
+        'address', 'date', 'inputDate', 'inputBy', 'extra_field', 'ipAddress')
 
     search_fields = Patients.Searchablefield
     list_filter = Patients.FilterFields
 
 
-
 admin.site.register(Patients, PatientAdmin)
+
+
+class OPDAdmin(admin.ModelAdmin):
+    list_display = (
+                    'User_UID', 'opd_slip_number', 'delmark', 'speciality', 'doctor', 'modifiedBy', 'modifiedTime', 'opd_fee',
+                    'opd_time', 'opd_date', 'payment_type', 'payment_status')
+    search_fields = OPD_Table.Searchablefield
+
+
+admin.site.register(OPD_Table, OPDAdmin)
 
 
 @admin.register(Specialty)
@@ -56,7 +66,6 @@ class DistrictAdmin(admin.ModelAdmin):
 class VillageAdmin(admin.ModelAdmin):
     list_display = ('Villageid', 'Village_name', 'DistrictID')
     # search_fields = Village.villagesearch
-
 
 
 @admin.register(City)

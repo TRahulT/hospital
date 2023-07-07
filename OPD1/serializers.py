@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Specialty, Doctor, State, District, Village, City
+from .models import Specialty, Doctor, State, District, Village, City,OPD_Table
 
 
 class SpecialtySerializer(serializers.ModelSerializer):
@@ -46,12 +46,10 @@ class PatientSerializer(serializers.ModelSerializer):
         model = Patients
         fields = '__all__'
 
-
-
-
-
-
-
+class OPD_TableSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OPD_Table
+        fields = '__all__'
 
 
 

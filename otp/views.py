@@ -1,5 +1,6 @@
 from django.conf import settings
 import random
+import requests
 from datetime import datetime, timedelta
 from django.utils import timezone
 from rest_framework import status
@@ -40,11 +41,13 @@ def send_otp(request):
             otp = OTP.objects.create(mobile_number=mobile_number, otp_code=otp_code, expiry_time=expiry_time)
 
         otp_serializer = OTPSerializer(otp)
+        print(otp)
 
         # Send the OTP via Twilio
         send_otp_via_twilio(mobile_number, otp_code)
+        print(otp_code)
 
-        return Response({'detail':'otp sent !!'}, status=status.HTTP_200_OK)
+        return Response({"Your OTP is ":otp_code}, status=status.HTTP_200_OK)
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -76,7 +79,7 @@ def verify_otp(request):
         # Delete the OTP and authenticate the user
         otp.delete()
         # Authenticate the user using the mobile number
-        user = authenticate(request, username=mobile_number, password=None)
+        # user = authenticate(request, username=mobile_number, password=None)
 
     #     if user is not None:
     #         # Login the user
@@ -140,13 +143,20 @@ def generate_otp():
     return str(otp) # Replace with your OTP generation code
 
 def send_otp_via_twilio(mobile_number, otp_code):
-    client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+    print(mobile_number)
+    print(otp_code)
+    api_key = 'ddfbe5602442481d9599aa4ea927fa24'
+    url = f"http://bulkwhatsapp.live/wapp/api/send?apikey={api_key}&mobile={mobile_number}&msg=Your OTP for hospital verification is {otp_code}. Please enter it within 2 mins. Thank you for choosing our hospital "
+    res= requests.get(url)
 
-    message = client.messages.create(
-        body=f'Your OTP: {otp_code}',
-        from_=settings.TWILIO_PHONE_NUMBER,
-        to=mobile_number
-    )
+
+    # client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+    #
+    # message = client.messages.create(
+    #     body=f'Your OTP: {otp_code}',
+    #     from_=settings.TWILIO_PHONE_NUMBER,
+    #     to=mobile_number
+    # )
 # @api_view(['POST'])
 # def logout_view(request):
 #     # Logout the user

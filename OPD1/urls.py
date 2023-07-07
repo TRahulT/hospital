@@ -9,9 +9,13 @@ from .views import (
 
     get_patients,get_patient,CreatePatientView, update_patient,delete_patient,
     get_patient_data,
+
+    opd_table_list, opd_table_detail,
     # users
     create_superuser, create_operator,operator_login, change_password,operator_logout,
     Create_patient,patient_login,DoctorLoginView,DoctorLogoutView,get_csrf_token
+
+    ,get_patient_visit,get_patient_by_phone_number
 
 )
 
@@ -61,5 +65,10 @@ urlpatterns = [
     path('doctor-logout/', DoctorLogoutView.as_view(), name='doctor_logout'),
     #doctor
     path('api/patients/<int:doctor_id>/<str:date>/', get_patient_data, name='get_patient_data'),
+    path('api/patient-visit/<int:patient_id>/', get_patient_visit, name='get_patient_visit'),
+    path('api/patients-by-number/<str:phone_number>/',get_patient_by_phone_number,name='get_patient_by_phone_number'),
     path('get_csrf_token/', get_csrf_token, name='get_csrf_token'),
+    #opd data
+    path('opd-tables/', opd_table_list, name='opd_table_list'),
+    path('opd-tables/<int:pk>/', opd_table_detail, name='opd_table_detail'),
 ]

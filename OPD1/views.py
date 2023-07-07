@@ -1,8 +1,7 @@
-from django.contrib.auth.models import Permission
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from .models import Specialty, Doctor, State, District, Village, City
 from .serializers import SpecialtySerializer, DoctorSerializer, StateSerializer, DistrictSerializer, VillageSerializer, \
-    CitySerializer, DoctorLoginSerializer, DoctorRegistrationSerializer
+    CitySerializer, DoctorLoginSerializer, DoctorRegistrationSerializer,OPD_Table,OPD_TableSerializer
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from django.contrib.auth import authenticate, login, logout
@@ -289,7 +288,7 @@ def get_districts_by_state(request, state_id):
     return JsonResponse(district_data, safe=False)
 
 
-from rest_framework.decorators import api_view
+
 from .models import Patients
 from .serializers import PatientSerializer
 
@@ -298,16 +297,24 @@ from .serializers import PatientSerializer
 @authentication_classes([BasicAuthentication])
 @permission_classes([AllowAny])
 def get_patients(request):
-    patients = Patients.objects.all()
-    serializer = PatientSerializer(patients, many=True)
-    return Response(serializer.data)
+    if request.method == 'GET':
+        patients = Patients.objects.all()
+        serializer = PatientSerializer(patients, many=True)
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        serializer = PatientSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
 
 
 @api_view(['GET'])
 @authentication_classes([BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def get_patient(request, pk):
-    patient = Patients.objects.get(Uid=pk)
+    patient = Patients.objects.get(id=pk)
     serializer = PatientSerializer(patient)
     return Response(serializer.data)
 
@@ -328,7 +335,7 @@ class CreatePatientView(APIView):
 @authentication_classes([BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def update_patient(request, pk):
-    patient = Patients.objects.get(Uid=pk)
+    patient = Patients.objects.get(id=pk)
     serializer = PatientSerializer(instance=patient, data=request.data, partial=True)
     if serializer.is_valid():
         name = serializer.validated_data['name']
@@ -354,12 +361,12 @@ def update_patient(request, pk):
 @authentication_classes([BasicAuthentication])
 @permission_classes([AllowAny])
 def delete_patient(request, pk):
-    patient = Patients.objects.get(Uid=pk)
+    patient = Patients.objects.get(id=pk)
     patient.delete()
     return Response(status=204)
 
 
-from rest_framework.decorators import api_view
+
 from rest_framework.response import Response
 from rest_framework import status
 from .models import CustomUser
@@ -529,23 +536,69 @@ def get_patient_data(request, doctor_id, date):
         search_date = datetime.strptime(date, '%Y-%m-%d').date()
 
         # Fetch all patients with matching doctor ID and date
-        patients = Patients.objects.filter(doctor_id=doctor_id, date=search_date, payment_status=True)
+        patients = OPD_Table.objects.filter(doctor=doctor_id, opd_date=search_date, payment_status=True)
 
         # Serialize the patient data
+
         serialized_patients = []
         for patient in patients:
             serialized_patients.append({
-                'Uid': patient.Uid,
-                'name': patient.name,
-                'dob': patient.dob,
-                'inputDate': patient.inputDate,
+                'id': patient.User_UID.id,
+                'name': patient.User_UID.name,
+                'Age':patient.User_UID.age,
+                'opd_slip':patient.opd_slip_number,
+                'opd_date':patient.opd_date,
+                'opd_time':patient.opd_time
+                # 'dob': patient.dob,
+                # 'inputDate': patient.inputDate,
                 # Add more fields as needed
             })
 
         return Response(serialized_patients)
     except ValueError:
         return Response({'error': 'Invalid date format. Please provide the date in the format "YYYY-MM-DD".'})
+@api_view(['GET'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([AllowAny])
+def get_patient_visit(request, patient_id):
+    try:
+        patients = OPD_Table.objects.filter(User_UID=patient_id)
 
+        # Serialize the patient data
+        serialized_patients = []
+        for patient in patients:
+            serialized_patients.append({
+                'id': patient.User_UID.id,
+                'name': patient.User_UID.name,
+                'Age':patient.User_UID.age,
+                'opd_slip':patient.opd_slip_number,
+                'opd_date':patient.opd_date,
+                'opd_time':patient.opd_time
+            })
+        return Response(serialized_patients)
+    except ValueError:
+        return Response({'error': 'Invalid'})
+
+@api_view(['GET'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([AllowAny])
+def get_patient_by_phone_number(request, phone_number):
+    try:
+
+        patients = Patients.objects.filter(phone_number=phone_number)
+
+        # Serialize the patient data
+
+        serialized_patients = []
+        for patient in patients:
+            serialized_patients.append({
+                'id': patient.id,
+                'name': patient.name,
+                'Age':patient.age,
+            })
+        return Response(serialized_patients)
+    except ValueError:
+        return Response({'error': 'Invalid'})
 
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
@@ -556,3 +609,41 @@ def get_csrf_token(request):
     response = JsonResponse({'csrf_token': csrf_token})
     response["Access-Control-Allow-Origin"] = "*"  # Allow requests from any origin
     return response
+
+
+@api_view(['GET', 'POST'])
+def opd_table_list(request):
+    if request.method == 'GET':
+        opd_tables = OPD_Table.objects.all()
+        serializer = OPD_TableSerializer(opd_tables, many=True)
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        serializer = OPD_TableSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def opd_table_detail(request, pk):
+    try:
+        opd_table = OPD_Table.objects.get(pk=pk)
+    except OPD_Table.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        serializer = OPD_TableSerializer(opd_table)
+        return Response(serializer.data)
+
+    elif request.method == 'PUT':
+        serializer = OPD_TableSerializer(opd_table, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        opd_table.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
