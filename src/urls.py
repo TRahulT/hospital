@@ -19,7 +19,7 @@ from django.conf.urls.static import static
 from django.conf import settings
 
 
-admin.site.site_header = "Hospital TechAdmin"
+admin.site.site_header = "Hospital TechAdmin R"
 admin.site.site_title = "Hospital Tech Admin Portal"
 admin.site.index_title = "Welcome to Hospital Tech Portal"
 urlpatterns = [
