@@ -8,12 +8,13 @@ from .models import State, District, City, Village
 
 
 from django.contrib import admin
-from .models import Specialty, Doctor, State, District, Village, City, Patients, CustomUser, OPD_Table
+from .models import Specialty, Doctor, State, District, Village, City, Patients, CustomUser, OPD_Table, PatientDocument
 
 admin.site.register(CustomUser)
-
+admin.site.register(PatientDocument)
 
 class PatientAdmin(admin.ModelAdmin):
+
     list_display = (
         'id', 'name', 'fh_name', 'dob', 'gender', 'category', 'phone_number', 'aternate_number', 'state', 'district',
         'city', 'village',
@@ -28,7 +29,7 @@ admin.site.register(Patients, PatientAdmin)
 
 class OPDAdmin(admin.ModelAdmin):
     list_display = (
-                    'User_UID', 'opd_slip_number', 'delmark', 'speciality', 'doctor', 'modifiedBy', 'modifiedTime', 'opd_fee',
+                    'id','User_UID', 'opd_slip_number', 'delmark', 'speciality', 'doctor', 'modifiedBy', 'modifiedTime', 'opd_fee',
                     'opd_time', 'opd_date', 'payment_type', 'payment_status')
     search_fields = OPD_Table.Searchablefield
 

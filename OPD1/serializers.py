@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Specialty, Doctor, State, District, Village, City,OPD_Table
+from .models import Specialty, Doctor, State, District, Village, City,OPD_Table,PatientDocument
 
 
 class SpecialtySerializer(serializers.ModelSerializer):
@@ -52,6 +52,10 @@ class OPD_TableSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class PDFDocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PatientDocument
+        fields = ('pdf_file',)
 
 
 

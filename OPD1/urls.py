@@ -1,4 +1,5 @@
 from django.urls import path
+
 from .views import (
     specialty_list, specialty_detail,
     doctor_list, doctor_detail,
@@ -15,9 +16,10 @@ from .views import (
     create_superuser, create_operator,operator_login, change_password,operator_logout,
     Create_patient,patient_login,DoctorLoginView,DoctorLogoutView,get_csrf_token
 
-    ,get_patient_visit,get_patient_by_phone_number
+    ,get_patient_visit,get_patient_by_phone_number,patient_document_detail
 
 )
+
 
 urlpatterns = [
     # path('admin/patient/pdf_export_preview/pdf-preview/', pdf_export_preview, name='pdf_export_preview'),
@@ -71,4 +73,7 @@ urlpatterns = [
     #opd data
     path('opd-tables/', opd_table_list, name='opd_table_list'),
     path('opd-tables/<int:pk>/', opd_table_detail, name='opd_table_detail'),
+
+    # path('patient-documents/', patient_document_list, name='patient-document-list'),
+    path('patient-documents/<int:pk>/', patient_document_detail, name='patient-document-detail'),
 ]

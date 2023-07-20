@@ -1,7 +1,9 @@
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from .models import Specialty, Doctor, State, District, Village, City
+from rest_framework.generics import get_object_or_404
+
+from .models import Specialty, Doctor, State, District, Village, City,PatientDocument
 from .serializers import SpecialtySerializer, DoctorSerializer, StateSerializer, DistrictSerializer, VillageSerializer, \
-    CitySerializer, DoctorLoginSerializer, DoctorRegistrationSerializer,OPD_Table,OPD_TableSerializer
+    CitySerializer, DoctorLoginSerializer, DoctorRegistrationSerializer,OPD_Table,OPD_TableSerializer ,PDFDocumentSerializer
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from django.contrib.auth import authenticate, login, logout
@@ -84,11 +86,11 @@ def doctor_list(request):
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
-@authentication_classes([BasicAuthentication])
-@permission_classes([IsAdminUser])
+# @authentication_classes([BasicAuthentication])
+# @permission_classes([IsAdminUser])
 def doctor_detail(request, pk):
     try:
-        doctor = Doctor.objects.get(pk=pk)
+        doctor = Doctor.objects.get(phone_number=pk)
     except Doctor.DoesNotExist:
         return Response(status=404)
 
@@ -293,7 +295,7 @@ from .models import Patients
 from .serializers import PatientSerializer
 
 
-@api_view(['GET'])
+@api_view(['GET','POST'])
 @authentication_classes([BasicAuthentication])
 @permission_classes([AllowAny])
 def get_patients(request):
@@ -509,7 +511,7 @@ class DoctorLoginView(APIView):
                 return Response({'detail': 'Login successful.', 'is_loged': True})
             else:
                 return Response({'detail': 'Invalid number or password.', 'is_loged': False},
-                                status=status.HTTP_400_BAD_REQUEST)
+                                status=status.HTTP_201_CREATED)
 
         except Doctor.DoesNotExist:
             return Response({'detail': 'does  not exist .', 'is_loged': False}, status=status.HTTP_400_BAD_REQUEST)
@@ -584,11 +586,8 @@ def get_patient_visit(request, patient_id):
 @permission_classes([AllowAny])
 def get_patient_by_phone_number(request, phone_number):
     try:
-
         patients = Patients.objects.filter(phone_number=phone_number)
-
         # Serialize the patient data
-
         serialized_patients = []
         for patient in patients:
             serialized_patients.append({
@@ -647,3 +646,43 @@ def opd_table_detail(request, pk):
     elif request.method == 'DELETE':
         opd_table.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# @api_view(['GET', 'POST'])
+# def patient_document_list(request):
+#     if request.method == 'GET':
+#         documents = PatientDocument.objects.all()
+#         serializer = PDFDocumentSerializer(documents, many=True)
+#         return Response(serializer.data)
+#
+#     elif request.method == 'POST':
+#         serializer = PDFDocumentSerializer(data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#
+
+@api_view(['GET', 'POST', 'DELETE'])
+def patient_document_detail(request, pk):
+    try:
+        document = PatientDocument.objects.get(Patient_doc_id=pk)
+
+    except PatientDocument.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        serializer = PDFDocumentSerializer(document)
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        serializer = PDFDocumentSerializer(document, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        document.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+

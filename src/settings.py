@@ -15,7 +15,8 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
@@ -31,6 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'import_export',
     #'jazzmin',
     'django.contrib.admin',
     'rest_framework',
@@ -48,9 +50,9 @@ INSTALLED_APPS = [
 # AUTH_USER_MODEL = 'demo.OTP'
 
 # Twilio settings
-TWILIO_ACCOUNT_SID = "AC12a0e08ab76623c8f7a28d70b2fd75e8"
-TWILIO_AUTH_TOKEN = '2b02d97f51abcf248aba0317253666ca'
-TWILIO_PHONE_NUMBER = "+13613155789"
+TWILIO_ACCOUNT_SID = "AC9556d1ac1720f7b093a9de843e47602c"
+TWILIO_AUTH_TOKEN = 'f938825b0eade5c9ef9ff35ff88ca59e'
+TWILIO_PHONE_NUMBER = "+14155238886"
 
 # Cache backend settings (using the in-memory cache for simplicity, you can use a different cache backend in production)
 CACHES = {

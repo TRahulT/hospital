@@ -1,11 +1,6 @@
 from django.contrib.auth.models import AbstractUser, User
 from django.db import models
-from django.db.models.signals import pre_save
-from django.dispatch import receiver
-from django.utils import timezone
-from django.contrib.auth import get_user_model
-from django.http import HttpRequest
-from django.contrib import admin
+
 import uuid
 
 
@@ -42,7 +37,7 @@ class Doctor(models.Model):
     qualification = models.CharField(max_length=100)
     experience = models.PositiveIntegerField()
     bio = models.TextField()
-    profile_picture = models.ImageField(upload_to='doctor_profile_pics')
+    profile_picture = models.CharField(max_length=300)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -106,12 +101,7 @@ class Patients(models.Model):
         ('O', 'Others'),
     )
     gender = models.CharField(max_length=7, choices=GENDER_CHOICES)
-    CATEGORY_CHOICES = (
-        ('GEN', 'General'),
-        ('OBC', 'OBC'),
-        ('SC', 'SC & ST'),
-    )
-    category = models.CharField(max_length=5, choices=CATEGORY_CHOICES)
+    category = models.CharField(max_length=50)
     phone_number = models.CharField(max_length=10)
     aternate_number = models.IntegerField(blank=True, null=True)
     state = models.ForeignKey(State, on_delete=models.CASCADE)
@@ -125,6 +115,7 @@ class Patients(models.Model):
     ipAddress = models.GenericIPAddressField(default='192.168.0.1')
     extra_field=models.CharField(max_length=100, blank=True, null=True)
     extra_field2 = models.CharField(max_length=100, blank=True, null=True)
+
     Searchablefield = ['id', 'name', 'phone_number']
     FilterFields = ['state']
 
@@ -155,7 +146,7 @@ def generate_opd_slip_number():
     return opd_slip_number
 class OPD_Table(models.Model):
     User_UID = models.ForeignKey(Patients, on_delete=models.CASCADE)
-    opd_slip_number = models.CharField(unique=True, max_length=6, default=generate_opd_slip_number)
+    opd_slip_number = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     delmark = models.BooleanField(default=True)
     speciality = models.ForeignKey(Specialty, on_delete=models.CASCADE)
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
@@ -167,6 +158,14 @@ class OPD_Table(models.Model):
     payment_type = models.CharField(max_length=30)
     payment_status = models.BooleanField(default=False)
     Searchablefield = ['opd_slip_number', 'User_UID', 'opd_date']
+
+
+class PatientDocument(models.Model):
+    Patient_doc= models.ForeignKey(OPD_Table,on_delete=models.CASCADE)
+    pdf_file = models.FileField(upload_to='pdf_uploads/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+
 
 
 

@@ -24,7 +24,7 @@ def send_otp(request):
         if otp:
             # Check if the existing OTP is still valid
             if otp.expiry_time > timezone.now():
-                return Response({'detail': 'OTP already sent. Please use the existing OTP.','is_verified':"null" }, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'detail': 'OTP already sent. Please use the existing OTP.','is_otp':False }, status=status.HTTP_200_OK)
 
         # Generate a new OTP
         otp_code = generate_otp()
@@ -47,7 +47,7 @@ def send_otp(request):
         send_otp_via_twilio(mobile_number, otp_code)
         print(otp_code)
 
-        return Response({"Your OTP is ":otp_code}, status=status.HTTP_200_OK)
+        return Response({"OTP":otp_code,'is_otp':True}, status=status.HTTP_200_OK)
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -142,21 +142,41 @@ def generate_otp():
     otp = random.randint(100000, 999999)
     return str(otp) # Replace with your OTP generation code
 
-def send_otp_via_twilio(mobile_number, otp_code):
-    print(mobile_number)
-    print(otp_code)
+def send_otp_via_twilio(mobile_number,otp_code):
+
+    # print(mobile_number)
+    api_url = 'http://148.251.129.118/wapp/api/send'
     api_key = 'ddfbe5602442481d9599aa4ea927fa24'
-    url = f"http://bulkwhatsapp.live/wapp/api/send?apikey={api_key}&mobile={mobile_number}&msg=Your OTP for hospital verification is {otp_code}. Please enter it within 2 mins. Thank you for choosing our hospital "
-    res= requests.get(url)
+    payload = {}
+    headers = {}
+    url = f'{api_url}?apikey={api_key}&mobile=91{mobile_number}&msg=Your%20OTP%20for%20verification%20is{otp_code}'
+    response = requests.request("GET", url, headers=headers, data=payload)
+    # response = requests.get(url)
+    # print(otp_code)
+    # api_key = 'ddfbe5602442481d9599aa4ea927fa24'
+    # url = f'http://148.251.129.118/wapp/api/send?apikey=ddfbe5602442481d9599aa4ea927fa24&mobile=91{mobile_number}&msg=Your%20OTP%20for%20verification%20is{otp_code}'
+    # # url = f"http://bulkwhatsapp.live/wapp/api/send?apikey={api_key}&mobile={mobile_number}&msg=Your OTP for Patient verification is {otp_code}. Please enter it within 10 mins. Thank you for choosing our Service "
+    # res= requests.get(url)
 
-
+    # account_sid = 'AC9556d1ac1720f7b093a9de843e47602c'
+    # auth_token = 'f938825b0eade5c9ef9ff35ff88ca59e'
+    # client = Client(account_sid, auth_token)
     # client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-    #
+
     # message = client.messages.create(
     #     body=f'Your OTP: {otp_code}',
     #     from_=settings.TWILIO_PHONE_NUMBER,
     #     to=mobile_number
     # )
+    # message = client.messages.create(
+    #     from_='whatsapp:+14155238886',
+    #     body=f'Your Twilio code :is {otp_code}',
+    #     to=f'whatsapp:{mobile_number}'
+    # )
+
+
+
+
 # @api_view(['POST'])
 # def logout_view(request):
 #     # Logout the user
