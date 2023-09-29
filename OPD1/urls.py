@@ -6,17 +6,17 @@ from .views import (
     state_list, state_detail,
     district_list, district_detail,
     village_list, village_detail,
-    city_list, city_detail,get_districts_by_state,
+    city_list, city_detail,get_districts_by_state,ImageViewSet,
 
-    get_patients,get_patient,CreatePatientView, update_patient,delete_patient,
+    get_patients,get_patient,CreatePatientView, update_patient,delete_patient,get_patient_mobile,
     get_patient_data,
 
-    opd_table_list, opd_table_detail,
+    opd_table_list, opd_table_detail,get_patient_data_date,
     # users
     create_superuser, create_operator,operator_login, change_password,operator_logout,
     Create_patient,patient_login,DoctorLoginView,DoctorLogoutView,get_csrf_token
 
-    ,get_patient_visit,get_patient_by_phone_number,patient_document_detail
+    ,get_patient_visit,get_patient_by_phone_number,patient_document_detail,DocMoney,TodayMoney,RecordViewSet,Operator_record_detail
 
 )
 
@@ -41,6 +41,8 @@ urlpatterns = [
     # Patient data
     path('patients/', get_patients, name='get_patients'),
     path('patients/<str:pk>/', get_patient, name='get_patient'),
+    path('patient-phonenumber/<int:mobile_number>/', get_patient_mobile, name='get_patient'),
+
 
     # path('doctor_patient/', get_doctor_patient, name='get_patient'),
     path('create_patient/', CreatePatientView.as_view(), name='create_patient'),
@@ -72,8 +74,15 @@ urlpatterns = [
     path('get_csrf_token/', get_csrf_token, name='get_csrf_token'),
     #opd data
     path('opd-tables/', opd_table_list, name='opd_table_list'),
-    path('opd-tables/<int:pk>/', opd_table_detail, name='opd_table_detail'),
-
+    path('opd-tables/<str:date>/',get_patient_data_date,name="table_data_by_date"),
+    path('opd-table/<int:pk>/', opd_table_detail, name='opd_table_detail'),
     # path('patient-documents/', patient_document_list, name='patient-document-list'),
     path('patient-documents/<int:pk>/', patient_document_detail, name='patient-document-detail'),
+    path('patient-record/<int:pk>/', Operator_record_detail, name='Operator_record_detail'),
+    # path('upload/', ImageViewSet.as_view(), name='upload'),
+    path('patient_documents/<int:patient_doc>/', ImageViewSet.as_view(), name='image-view'),
+    path('patient_record/<int:patient_doc>/', RecordViewSet.as_view(), name='record-view'),
+    path('doctor/cost/<int:doctor_id>/<str:date>/', DocMoney, name='get_patient_data'),
+    path('Today/cost/<str:date>/', TodayMoney, name='get_patient_data'),
+
 ]

@@ -1,9 +1,11 @@
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework.generics import get_object_or_404
+from fcm_django.models import FCMDevice
+from rest_framework.decorators import api_view, authentication_classes, permission_classes, parser_classes
+from rest_framework.generics import get_object_or_404, ListAPIView
+from rest_framework.utils import json
 
-from .models import Specialty, Doctor, State, District, Village, City,PatientDocument
+from .models import Specialty, Doctor, State, District, Village, City,PatientDocument,OperatorReport
 from .serializers import SpecialtySerializer, DoctorSerializer, StateSerializer, DistrictSerializer, VillageSerializer, \
-    CitySerializer, DoctorLoginSerializer, DoctorRegistrationSerializer,OPD_Table,OPD_TableSerializer ,PDFDocumentSerializer
+    CitySerializer, DoctorLoginSerializer, DoctorRegistrationSerializer,OPD_Table,OPD_TableSerializer ,PDFDocumentSerializer,OperatorRecordSerializer
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from django.contrib.auth import authenticate, login, logout
@@ -11,7 +13,9 @@ from rest_framework.decorators import api_view
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.hashers import check_password
 from rest_framework.views import APIView
+from django.conf import settings
 
+from .mypagination import MyCustomPagination
 
 # Specialty views
 @api_view(['GET', 'POST'])
@@ -128,8 +132,10 @@ def doctor_detail(request, pk):
 def state_list(request):
     if request.method == 'GET':
         states = State.objects.all()
-        serializer = StateSerializer(states, many=True)
-        return Response(serializer.data)
+        paginator = MyCustomPagination()
+        result_page = paginator.paginate_queryset(states, request)
+        serializer = StateSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
     elif request.method == 'POST':
         serializer = StateSerializer(data=request.data)
         if serializer.is_valid():
@@ -281,7 +287,7 @@ def city_detail(request, pk):
         return Response(status=204)
 
 
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 
 
 def get_districts_by_state(request, state_id):
@@ -301,8 +307,10 @@ from .serializers import PatientSerializer
 def get_patients(request):
     if request.method == 'GET':
         patients = Patients.objects.all()
-        serializer = PatientSerializer(patients, many=True)
-        return Response(serializer.data)
+        paginator = MyCustomPagination()
+        result_page = paginator.paginate_queryset(patients, request)
+        serializer = PatientSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
     elif request.method == 'POST':
         serializer = PatientSerializer(data=request.data)
@@ -317,6 +325,15 @@ def get_patients(request):
 @permission_classes([IsAuthenticated])
 def get_patient(request, pk):
     patient = Patients.objects.get(id=pk)
+    serializer = PatientSerializer(patient)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def get_patient_mobile(request, mobile_number):
+    patient = Patients.objects.get(phone_number=mobile_number)
     serializer = PatientSerializer(patient)
     return Response(serializer.data)
 
@@ -422,10 +439,10 @@ def operator_login(request):
         login(request, user)
 
         # Return success response
-        return Response({'message': 'Operator logged in successfully.'}, status=status.HTTP_200_OK)
+        return Response({'message': 'Operator logged in successfully.', 'is_log': True}, status=status.HTTP_200_OK)
     else:
         # Return error response
-        return Response({'message': 'Invalid username or password.'}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({'message': 'Invalid username or password.', 'is_log': False}, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -545,6 +562,7 @@ def get_patient_data(request, doctor_id, date):
         serialized_patients = []
         for patient in patients:
             serialized_patients.append({
+                'slipID': patient.id,
                 'id': patient.User_UID.id,
                 'name': patient.User_UID.name,
                 'Age':patient.User_UID.age,
@@ -570,12 +588,14 @@ def get_patient_visit(request, patient_id):
         serialized_patients = []
         for patient in patients:
             serialized_patients.append({
+                'slipID': patient.id,
                 'id': patient.User_UID.id,
                 'name': patient.User_UID.name,
                 'Age':patient.User_UID.age,
                 'opd_slip':patient.opd_slip_number,
                 'opd_date':patient.opd_date,
-                'opd_time':patient.opd_time
+                'opd_time':patient.opd_time,
+
             })
         return Response(serialized_patients)
     except ValueError:
@@ -609,13 +629,24 @@ def get_csrf_token(request):
     response["Access-Control-Allow-Origin"] = "*"  # Allow requests from any origin
     return response
 
-
+# @api_view(['GET','POST'])
+# @authentication_classes([BasicAuthentication])
+# @permission_classes([AllowAny])
+# def get_patients(request):
+#     if request.method == 'GET':
+#         patients = Patients.objects.all()
+#         paginator = MyCustomPagination()
+#         result_page = paginator.paginate_queryset(patients, request)
+#         serializer = PatientSerializer(result_page, many=True)
+#         return
 @api_view(['GET', 'POST'])
 def opd_table_list(request):
     if request.method == 'GET':
         opd_tables = OPD_Table.objects.all()
-        serializer = OPD_TableSerializer(opd_tables, many=True)
-        return Response(serializer.data)
+        paginator = MyCustomPagination()
+        result_page = paginator.paginate_queryset(opd_tables, request)
+        serializer = OPD_TableSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
     elif request.method == 'POST':
         serializer = OPD_TableSerializer(data=request.data)
@@ -624,28 +655,66 @@ def opd_table_list(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([AllowAny])
+def get_patient_data_date(request, date):
+    try:
+        # Convert the date string to a datetime object
+        search_date = datetime.strptime(date, '%Y-%m-%d').date()
+
+        # Fetch all patients with matching doctor ID and date
+        patients = OPD_Table.objects.filter(opd_date=search_date)
+
+        # Serialize the patient data
+
+        serialized_patients = []
+        for patient in patients:
+            serialized_patients.append({
+                'id': patient.id,
+                'User_UID': patient.User_UID.id,
+                'name': patient.User_UID.name,
+                'Age':patient.User_UID.age,
+                "speciality": patient.speciality.name,
+                "doctor_First_Name": patient.doctor.first_name,
+                "doctor_Last_Name": patient.doctor.last_name,
+                'opd_slip':patient.opd_slip_number,
+                "modifiedTime": patient.modifiedTime,
+                "opd_fee": patient.opd_fee,
+                'opd_date':patient.opd_date,
+                'opd_time':patient.opd_time,
+                "payment_type": patient.payment_type,
+                "payment_status": patient.payment_status,
+                # 'dob': patient.dob,
+                # 'inputDate': patient.inputDate,
+                # Add more fields as needed
+            })
+        return Response(serialized_patients)
+    except ValueError:
+        return Response({'error': 'Invalid date format. Please provide the date in the format "YYYY-MM-DD".'})
+
 
 @api_view(['GET', 'PUT', 'DELETE'])
 def opd_table_detail(request, pk):
     try:
         opd_table = OPD_Table.objects.get(pk=pk)
+        if request.method == 'GET':
+            serializer = OPD_TableSerializer(opd_table)
+            return Response(serializer.data)
+
+        elif request.method == 'PUT':
+            serializer = OPD_TableSerializer(opd_table, data=request.data ,partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        elif request.method == 'DELETE':
+            opd_table.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
     except OPD_Table.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    if request.method == 'GET':
-        serializer = OPD_TableSerializer(opd_table)
-        return Response(serializer.data)
-
-    elif request.method == 'PUT':
-        serializer = OPD_TableSerializer(opd_table, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    elif request.method == 'DELETE':
-        opd_table.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # @api_view(['GET', 'POST'])
@@ -663,26 +732,202 @@ def opd_table_detail(request, pk):
 #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 #
 
-@api_view(['GET', 'POST', 'DELETE'])
+#
+@api_view(['GET',  'DELETE'])
 def patient_document_detail(request, pk):
     try:
-        document = PatientDocument.objects.get(Patient_doc_id=pk)
-
+        documents = PatientDocument.objects.filter(Patient_doc_id=pk)
     except PatientDocument.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
-        serializer = PDFDocumentSerializer(document)
+        serializer = PDFDocumentSerializer(documents,many=True)
+        # serializer_data = []
+        # for document in documents:
+        #     serializer_data.append({
+        #         'slip_id':document.Patient_doc.id,
+        #         'id':document.id,
+        #         'pdf_file':document.pdf_file
+        #     })
         return Response(serializer.data)
+    elif request.method == 'DELETE':
+        documents.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-    elif request.method == 'POST':
-        serializer = PDFDocumentSerializer(document, data=request.data)
+
+# class ImageViewSet(ListAPIView):
+#     queryset = PatientDocument.objects.all()
+#     serializer_class = PDFDocumentSerializer
+#
+#     def post(self, request, *args, **kwargs):
+#         file = request.data['pdf_file']
+#         pdf_file = PatientDocument.objects.create(pdf_file=file)
+#         return HttpResponse(json.dumps({'message': "Uploaded"}), status=200)
+
+class ImageViewSet(APIView):
+    def post(self, request, patient_doc):
+        # Extract the foreign key (Patient_doc) from the URL
+        patient_doc_id = patient_doc
+        print(patient_doc_id)
+
+        # Check if the patient_doc_id is valid before proceeding
+        try:
+            opd1_patient_document = OPD_Table.objects.get(id=patient_doc_id)
+            print(opd1_patient_document)
+        except OPD_Table.DoesNotExist:
+            return Response({'message': 'Invalid Patient_doc ID'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Combine the foreign key value with the request data
+        print(opd1_patient_document.id)
+        data = request.data.copy()
+        data['Patient_doc'] = opd1_patient_document.id
+
+        # request.data["pdf_file"] = pdf_file
+        # # Assuming 'pdf_file' is the key for the PDF file data in the request
+        pdf_file = request.data.get('pdf_file')
+        data['pdf_file'] = pdf_file
+        print(data)
+        serializer = PDFDocumentSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response({'message': 'Uploaded'}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+from django.db.models import Sum
+
+@api_view(['GET'])
+def DocMoney(request, doctor_id, date):
+    try:
+        # Convert the date string to a datetime object
+        search_date = datetime.strptime(date, '%Y-%m-%d').date()
+
+        # Fetch all patients with matching doctor ID and date
+        opd_fee_sum = OPD_Table.objects.filter(doctor=doctor_id, opd_date=search_date, payment_status=True).aggregate(Sum('opd_fee'))['opd_fee__sum']
+
+        # Serialize the patient data
+        response_data = {
+            'opd_fee_sum': opd_fee_sum
+        }
+        return Response(response_data)
+    except ValueError:
+        return Response({'error': 'Invalid date format. Please provide the date in the format "YYYY-MM-DD".'})
+
+@api_view(['GET'])
+def TodayMoney(request, date):
+    try:
+        # Convert the date string to a datetime object
+        search_date = datetime.strptime(date, '%Y-%m-%d').date()
+
+        # Fetch all patients with matching doctor ID and date
+        opd_fee_sum = OPD_Table.objects.filter(opd_date=search_date, payment_status=True).aggregate(Sum('opd_fee'))['opd_fee__sum']
+
+        # Serialize the patient data
+        response_data = {
+            'opd_fee_Today': opd_fee_sum
+        }
+        return Response(response_data)
+    except ValueError:
+        return Response({'error': 'Invalid date format. Please provide the date in the format "YYYY-MM-DD".'})
+
+@api_view(['GET',  'DELETE'])
+def Operator_record_detail(request, pk):
+    try:
+        documents = OperatorReport.objects.filter(Patient_record_id=pk)
+    except OperatorReport.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        serializer = OperatorRecordSerializer(documents,many=True)
+        # serializer_data = []
+        # for document in documents:
+        #     serializer_data.append({
+        #         'slip_id':document.Patient_doc.id,
+        #         'id':document.id,
+        #         'pdf_file':document.pdf_file
+        #     })
+        return Response(serializer.data)
     elif request.method == 'DELETE':
-        document.delete()
+        documents.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+import requests
+class RecordViewSet(APIView):
+    def post(self, request, patient_doc):
+        # Extract the foreign key (Patient_doc) from the URL
+        patient_record_id = patient_doc
+        print(patient_record_id)
+
+        # Check if the patient_doc_id is valid before proceeding
+        try:
+            opd1_patient_document = OPD_Table.objects.get(id=patient_record_id)
+            print(opd1_patient_document)
+        except OPD_Table.DoesNotExist:
+            return Response({'message': 'Invalid Patient_ ID'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Combine the foreign key value with the request data
+        print(opd1_patient_document.id)
+        data = request.data.copy()
+        data['Patient_record'] = opd1_patient_document.id
+        category = request.data.get('category')
+        data['category'] = category
+        pdf_file = request.data.get('pdf_file')
+        data['pdf_file'] = pdf_file
+        print(data)
+        push_notification_token = request.data.get('push_notification_token')
+        data['push_notification_token'] = push_notification_token
+
+        serializer = OperatorRecordSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+
+            push_notification_token = request.data.get('push_notification_token')
+            if push_notification_token:
+                url = "https://fcm.googleapis.com/fcm/send"
+                headers = {
+                    'Authorization': f'key={settings.FCM_DJANGO_SETTINGS["FCM_SERVER_KEY"]}',
+                    'Content-Type': 'application/json'
+                }
+
+                message = {
+                    "notification": {
+                        "title": "Bunty Bhadwa be like",
+                        "body": "panii panii panii panii uncle jiiii !!! pani pila dijiyee mera galaa sukh rha hai."
+                    },
+                    "to": push_notification_token,
+                    "data": {
+                        "message": "hello Bunty seth"
+                    }
+                }
+
+                response = requests.post(url, headers=headers, json=message)
+
+                if response.status_code == 200:
+                    return Response({'message': 'Report uploaded and notification sent'},
+                                    status=status.HTTP_201_CREATED)
+                else:
+                    return Response({'message': 'Error sending notification'},
+                                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            return Response({'message': 'Report uploaded'}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+            # patient = opd1_patient_document.patient  # Assuming there's a ForeignKey relationship
+            # notification_data = {
+            #     "title": "New Record Uploaded",
+            #     "body": f"A new record has been uploaded for {patient.name}.",
+            # }
+            #
+            # patient_device = patient.fcm_device
+            # if patient_device:
+            #     fcm_send_message(
+            #         registration_id=patient_device.registration_id,
+            #         data=notification_data,
+            #   )
+            # return Response({'message': 'Uploaded'}, status=status.HTTP_201_CREATED)
+        #
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

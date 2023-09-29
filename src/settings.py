@@ -15,8 +15,8 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# MEDIA_URL = '/media/'
-# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+
     'import_export',
     #'jazzmin',
     'django.contrib.admin',
@@ -39,6 +40,7 @@ INSTALLED_APPS = [
     'twilio',
     'otp',
     # 'user',
+    'fcm_django',
     'OPD1',
     'corsheaders',
     'django.contrib.auth',
@@ -189,8 +191,31 @@ CORS_ALLOW_CREDENTIALS = True
 # for locally
 
 CSRF_COOKIE_SECURE = False
+
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': [
+#         'rest_framework.authentication.TokenAuthentication',
+#     ],
+#     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+#     'PAGE_SIZE': 10,  # Number of entries per page
+# }
 REST_FRAMEWORK = {
+
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-    ]
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,  # Number of entries per page
 }
+
+
+FCM_DJANGO_SETTINGS = {
+    "FCM_SERVER_KEY": "AAAAiKWY3bU:APA91bFTUfM0qqPTUTYw25rWFLBfRG8F9dJhefpeM4E7f-6ADBHiotEaMeBUCLSYtFKOq0UcKIYW8hfy9MPEn2Vpi4H178ATJthbX800SIPNAcsTK_Lw5VxYb7FTeEYYtTLdFZt5IMe0",
+}
+
+
+# import firebase_admin
+# from firebase_admin import credentials
+#
+# cred = credentials.Certificate('.google.JSON')
+# firebase_admin.initialize_app(cred)

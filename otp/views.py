@@ -143,14 +143,20 @@ def generate_otp():
     return str(otp) # Replace with your OTP generation code
 
 def send_otp_via_twilio(mobile_number,otp_code):
+    # if mobile_number and otp_code:
+    #     str1 = f'{otp_code} is your OTP for OPD Verification. Please enter within 3 Minutes to register. RS Technology'
+    #     api_url = f"https://newsms.rst1.com/smsapi/index?key=460059E5B8F63E&campaign=85&routeid=1&type=text&contacts={mobile_number}&senderid=DEMO&msg={str1}"
+        api=f'https://module.logonutility.com/smsapi/index?key=460059E5B8F63E&campaign=85&routeid=1&type=text&contacts={mobile_number}&senderid=RSTBWN&msg={otp_code} is your OTP for Registration Verification.Please enter within 3 Minutes to register.RS Technology'
+        response = requests.get(api, verify=False)
 
     # print(mobile_number)
-    api_url = 'http://148.251.129.118/wapp/api/send'
-    api_key = 'ddfbe5602442481d9599aa4ea927fa24'
-    payload = {}
-    headers = {}
-    url = f'{api_url}?apikey={api_key}&mobile=91{mobile_number}&msg=Your%20OTP%20for%20verification%20is{otp_code}'
-    response = requests.request("GET", url, headers=headers, data=payload)
+    # api_url = 'http://148.251.129.118/wapp/api/send'
+    # api_key = 'ddfbe5602442481d9599aa4ea927fa24'
+    # payload = {}
+    # headers = {}
+    # url = f'{api_url}?apikey={api_key}&mobile=91{mobile_number}&msg=Your%20OTP%20for%20verification%20is{otp_code}'
+    # response = requests.request("GET", url, headers=headers, data=payload)
+
     # response = requests.get(url)
     # print(otp_code)
     # api_key = 'ddfbe5602442481d9599aa4ea927fa24'
